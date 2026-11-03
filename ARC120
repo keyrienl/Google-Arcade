@@ -1,0 +1,12 @@
+About: Create a new instance from the Cloud console 
+#SETTING
+gcloud config set project "$PROJECT_ID"
+gcloud config set compute/region "$REGION"
+gcloud config set compute/zone "$ZONE"
+
+#TASK 1
+#Create a Cloud Storage bucket
+gcloud compute instances create gcelab2 --machine-type e2-medium --zone=$ZONE
+
+#TASK2
+gcloud compute disks create mydisk --size=200GB 
