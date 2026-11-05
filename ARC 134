@@ -1,0 +1,93 @@
+Task 2. Create and manage service accounts 
+#name: devops
+gcloud iam service-accounts create devops --display-name "my service account"
+
+#Verify the Service Account (Optional)
+gcloud iam service-accounts list
+
+Task 3. Grant IAM permissions to a service account using the gcloud CLI
+#permission : iam.serviceAccountUser, compute.instanceAdmin
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID \
+    --member serviceAccount:devops@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com \
+    --role roles/iam.serviceAccountUser \
+    --role roles/compute.instanceAdmin \
+    --condition=None
+
+Task 4. Create a compute instance with a service account attached using gcloud
+#name: vm-2
+gcloud compute instances create vm-2 \
+    --zone=us-east4-b \
+    --service-account=devops@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com \
+    --scopes=https://www.googleapis.com/auth/cloud-platform
+
+#Cek Instance list
+gcloud compute instances list
+
+Task 5. Create a custom role using a YAML file
+#name: role-definition.yaml 
+#custom role definition: cloudsql.instances.connect & cloudsql.instances.get
+
+nano role-definition.yaml
+
+title: "role-definition"
+description: "Custom role to connect and get Cloud SQL instances"
+stage: "ALPHA"
+includedPermissions:
+- cloudsql.instances.connect
+- cloudsql.instances.get
+pressing CTRL+X, Y, and then ENTER
+
+#update the role:
+gcloud iam roles update editor --project $DEVSHELL_PROJECT_ID \
+--file new-role-definition.yaml
+
+Task 6. Use the client libraries to access BigQuery from a service account
+#service account name: bigquery-qwiklab
+gcloud iam service-accounts create bigquery-qwiklab \
+    --description="BigQuery Service Account" \
+    --display-name="bigquery-qwiklab"
+
+#role: BigQuery Data Viewer & BigQuery User
+gcloud projects add-iam-policy-binding qwiklabs-gcp-04-646bd243053a \
+    --member="serviceAccount:bigquery-qwiklab@qwiklabs-gcp-04-646bd243053a.iam.gserviceaccount.com" \
+    --role="roles/bigquery.dataViewer"
+
+gcloud projects add-iam-policy-binding qwiklabs-gcp-04-646bd243053a \
+    --member="serviceAccount:bigquery-qwiklab@qwiklabs-gcp-04-646bd243053a.iam.gserviceaccount.com" \
+    --role="roles/bigquery.user"
+
+#name: vm-2
+gcloud compute instances create bigquery-instance \
+    --zone=us-east4-b \
+    --service-account=bigquery-qwiklab@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com \
+    --scopes=https://www.googleapis.com/auth/cloud-platform
+#SSH into the bigquery-instance
+pip install google-cloud-bigquery google-auth pandas db-dtypes --break-system-packages
+
+#masukin contoh file python
+cat << 'EOF' > query.py
+from google.auth import compute_engine
+from google.cloud import bigquery
+
+credentials = compute_engine.Credentials(
+    service_account_email='bigquery-qwiklab@qwiklabs-gcp-04-646bd243053a.iam.gserviceaccount.com')
+
+query = '''
+SELECT name, SUM(number) as total_people
+FROM `bigquery-public-data.usa_names.usa_1910_2013`
+WHERE state = 'TX'
+GROUP BY name, state
+ORDER BY total_people DESC
+LIMIT 20
+'''
+
+client = bigquery.Client(
+    project='qwiklabs-gcp-04-646bd243053a',
+    credentials=credentials)
+
+print(client.query(query).to_dataframe())
+EOF
+
+#instal
+python3 query.py
+
