@@ -1,0 +1,59 @@
+Analyze Images with the Cloud Vision API: Challenge Lab
+
+Task 1. Verify your resources
+#created an API key have; Cloud Vision API
+APIKEY = AIzaSyBL0apjW9wCHNMTXqJUzDhdU2072KM4vNw
+export API_KEY=AIzaSyBL0apjW9wCHNMTXqJUzDhdU2072KM4vNw
+
+#TEXT_DETECTION method of the Vision API.
+
+{
+  "requests": [
+      {
+        "image": {
+          "source": {
+              "gcsImageUri": "gs://qwiklabs-gcp-02-73b77123599c-bucket/manif-des-sans-papiers.jpg"
+          }
+        },
+        "features": [
+          {
+            "type": "TEXT_DETECTION",
+            "maxResults": 10
+          }
+        ]
+      }
+  ]
+}
+
+#Call the Vision API with curl
+curl -s -X POST -H "Content-Type: application/json" --data-binary @request.json  https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}
+#Saves the curl response in text-response.json file.
+curl -s -X POST -H "Content-Type: application/json" --data-binary @request.json  https://vision.googleapis.com/v1/images:annotate?key=${API_KEY} -o text-response.json
+#Upload output to Cloud Storage
+gcloud storage cp text-response.json gs://qwiklabs-gcp-02-73b77123599c-bucket
+
+#LANDMARK_DETECTION method of the Vision API.
+
+{
+  "requests": [
+      {
+        "image": {
+          "source": {
+              "gcsImageUri": "gs://qwiklabs-gcp-02-73b77123599c-bucket/manif-des-sans-papiers.jpg"
+          }
+        },
+        "features": [
+          {
+            "type": "LANDMARK_DETECTION",
+            "maxResults": 10
+          }
+        ]
+      }
+  ]
+}
+#Call the Vision API with curl
+curl -s -X POST -H "Content-Type: application/json" --data-binary @request.json  https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}
+#Saves the curl response in text-response.json file.
+curl -s -X POST -H "Content-Type: application/json" --data-binary @request.json  https://vision.googleapis.com/v1/images:annotate?key=${API_KEY} -o landmark-response.json
+#Upload output to Cloud Storage
+gcloud storage cp landmark-response.json gs://qwiklabs-gcp-02-73b77123599c-bucket
